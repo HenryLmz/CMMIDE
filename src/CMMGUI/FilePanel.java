@@ -5,31 +5,37 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
 
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.MutableTreeNode;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreeSelectionModel;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter.DEFAULT;
+
+import com.sun.prism.Texture;
+
+import sun.java2d.cmm.kcms.CMM;
 
 
 public class FilePanel extends JPanel implements TreeSelectionListener{
 	private JTree jTree = null;
 	private JScrollPane jScrollPane = null;
 	DefaultMutableTreeNode top = null; // decl-index=0
-	static ArrayList<DefaultMutableTreeNode> projectNode;
-	static ArrayList<DefaultMutableTreeNode> fileNode;
+
 	public FilePanel(){
 		super();
-		projectNode = new ArrayList<DefaultMutableTreeNode>();
-		fileNode = new ArrayList<DefaultMutableTreeNode>();
 		jScrollPane = new JScrollPane();
 		jScrollPane.setPreferredSize(new Dimension(150, CMMmainFrame.Defualt_height/2+CMMmainFrame.Defualt_height/4));
 		jScrollPane.setViewportView(getJTree());
 		this.add(jScrollPane);
 	}
-
+	
+	/*
 	final static void findDirectory(File dir) throws Exception{
 		File[] fs = dir.listFiles();
 		int projectCount=0;
@@ -43,10 +49,29 @@ public class FilePanel extends JPanel implements TreeSelectionListener{
 				{
 					if (projectFs[j].getName().endsWith("cmm")) {
 						//add leaf node
+						new DefaultMutableTreeNode();
 						projectNode.get(projectCount-1).add(new DefaultMutableTreeNode(projectFs[j].getName()));
 						
 					}
 				}
+			}
+		}
+	}
+	*/
+	
+	final static void findDirectory(File dir,DefaultMutableTreeNode top) throws Exception{
+		File[] fs = dir.listFiles();
+		for(int i=0; i<fs.length; i++){
+			if (fs[i].isFile()) {
+				DefaultMutableTreeNode fileNode = new DefaultMutableTreeNode(fs[i].getName());
+				top.add(fileNode);
+			}
+			if (fs[i].isDirectory()) {
+				DefaultMutableTreeNode projectNode = new DefaultMutableTreeNode(fs[i].getName());
+				top.add(projectNode);
+				//递归调用获取文件夹下的文件
+				DefaultMutableTreeNode projectTop = projectNode;
+				findDirectory(fs[i],projectTop);
 			}
 		}
 	}
@@ -56,29 +81,25 @@ public class FilePanel extends JPanel implements TreeSelectionListener{
 			top = new DefaultMutableTreeNode("CmmWorkspace");
 			File path = new File("D:\\CmmWorkspace");
 			try {
-				findDirectory(path);
+				findDirectory(path,top);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			createNodes(top);
 			jTree = new JTree(top);
-			jTree.getSelectionModel().setSelectionMode(TreeSelectionModel.DISCONTIGUOUS_TREE_SELECTION);
+			jTree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 			jTree.addTreeSelectionListener(this);
 	    }
 		return jTree;
 	}
 
-	private void createNodes(DefaultMutableTreeNode top) {
-		for (int i = 0; i < projectNode.size(); i++) {
-			top.add(projectNode.get(i));
-		}
-	}
 	
 	//open the file 
 	void openfile(String parentName,String leafName){
-		String filePath = "D:\\CmmWorkspace\\"+parentName+"\\"+leafName;
+	
+		String filePath = "D:\\"+parentName+leafName;
 		File file = new File(filePath);
 		if (!leafName.endsWith(".cmm")||!file.exists()) {
+			JOptionPane.showMessageDialog(null, "该文件不能被打开");
 			return;
 		}
 		try {
@@ -124,12 +145,28 @@ public class FilePanel extends JPanel implements TreeSelectionListener{
 			// Nothing is selected.
 			return;
 		if(node.isRoot()){
+			System.out.println(node.toString());
 			System.err.println("root chenggong");
 		}
 		if (node.isLeaf()) {
-			String parentName = node.getParent().toString();
 			String leafName = node.toString();
-			openfile(parentName, leafName);
+			String[] parentName = new String[5];
+			for (int j = 0; j < parentName.length; j++) {
+				parentName[j]="";
+			}
+			int i=0;
+			while (node.getParent()!=null) {
+				node = (DefaultMutableTreeNode) node.getParent();
+				parentName[i]= node.toString()+"\\";
+				i++;
+			}
+			String parentNames="";
+			for (int j = 0; j < parentName.length; j++) {
+				parentNames =parentName[j]+parentNames;
+			}
+			System.out.println(parentNames);
+			System.err.println(leafName);
+			openfile(parentNames, leafName);
 		}
 	}
 }

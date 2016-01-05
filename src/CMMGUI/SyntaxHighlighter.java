@@ -60,7 +60,7 @@ public class SyntaxHighlighter implements DocumentListener {
 		try {
 			while (start < end) {
 				ch = getCharAt(doc, start);
-				if (Character.isLetter(ch)||Character.isDigit(ch)||ch == '_'||ch=='/'||ch=='*'||ch=='\t'||ch=='\n') {
+				if (Character.isLetter(ch)||Character.isDigit(ch)||ch == '_'||ch=='/'||ch=='*'||ch=='\t') {
 						start = colouringWord(doc, start);
 				}
 				else {
@@ -125,7 +125,7 @@ public class SyntaxHighlighter implements DocumentListener {
 	
 	public boolean isWordCharacter(Document doc, int pos) throws BadLocationException {
 		char ch = getCharAt(doc, pos);
-		if (Character.isLetter(ch)||Character.isDigit(ch)||ch == '_'||ch=='/'||ch=='*'||ch=='\t'||ch=='\n') { return true; }
+		if (Character.isLetter(ch)||Character.isDigit(ch)||ch == '_'||ch=='/'||ch=='*'||ch=='\t') { return true; }
 		return false;
 	}
 	public boolean isDigitCharacter(Document doc, int pos) throws BadLocationException{

@@ -3,9 +3,12 @@ package CMMGUI;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.Console;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.HashMap;
 
@@ -30,6 +33,10 @@ public class CMMmainFrame extends JFrame {
 	private String cpRight="CopyRigth@ 朱超 徐航 方巧璐 刘梦舟";
 	private String cpTime="in 2015-2016上学年";
 	String[] outputString=new String[4];
+	
+	ByteArrayOutputStream baoStream;
+	ByteArrayOutputStream errStream;
+	
 	/** Creates new form MainFrame */
     public CMMmainFrame() {
     	//set the title of the frame 
@@ -53,10 +60,20 @@ public class CMMmainFrame extends JFrame {
         	File file = new File("D:\\CmmWorkspace");
         	if (!file.exists()  && !file.isDirectory()) {
 				file.mkdir();
+				System.out.println("新建根目录成功");
 			}
         }catch(Exception e){
         	System.out.println("新建根目录出错");
         }
+        
+        baoStream = new ByteArrayOutputStream(1024);
+   	    errStream = new ByteArrayOutputStream(1024);
+   	    //重定向控制台输出
+   	    PrintStream errStream1 = new PrintStream(errStream);
+   	    PrintStream cacheStream = new PrintStream(baoStream);
+   	    System.setOut(cacheStream);
+   	    System.setErr(errStream1);
+   	    
     }
 
     // Variables declaration - do not modify
@@ -64,6 +81,7 @@ public class CMMmainFrame extends JFrame {
     //MenuBar Menu MenuItem
     private JMenuBar MainMenuBar;
     private JMenu fileMenu;		//file Menu include open, save file and exit Menu 
+    	private JMenuItem newProjectMenuItem;
     	private JMenuItem newFileMenuItem;
     	private JMenuItem openFileMenuItem;
     	private JMenuItem saveMenuItem;
@@ -112,12 +130,14 @@ public class CMMmainFrame extends JFrame {
     	private JPanel midPanel;
     	private JPanel cifaPanel;
     	private JPanel yufaPanel;
-    	private TextArea outTextArea;
+    	private JTextPane outTextArea;
     	private TextArea midTextArea;
     	private TextArea cifaTextArea;
     	private TextArea yufaTextArea;
     private	JSplitPane splitPane;
     // End of variables declaration
+    
+	
     /** 
      * This method is called frame within the constructor 
      * to initialize the frame
@@ -128,6 +148,7 @@ public class CMMmainFrame extends JFrame {
     	mainPan = new JPanel(new BorderLayout()); 
     	MainMenuBar = new JMenuBar();
     	fileMenu = new JMenu();	//file Menu include open, save file, about us and exit Menu 
+    		newProjectMenuItem = new JMenuItem();
     		newFileMenuItem = new JMenuItem();
     		openFileMenuItem = new JMenuItem();
     		saveMenuItem = new JMenuItem();
@@ -168,7 +189,8 @@ public class CMMmainFrame extends JFrame {
         	    midPanel = new JPanel(new BorderLayout());
         	    cifaPanel = new JPanel(new BorderLayout());
                 yufaPanel = new JPanel(new BorderLayout());
-                outTextArea = new TextArea();
+                outTextArea = new JTextPane();
+                //outTextArea.setText(baoStream.toString());
                 outTextArea.setEditable(true);
                 midTextArea = new TextArea();
                 midTextArea.setEditable(false);
@@ -186,7 +208,10 @@ public class CMMmainFrame extends JFrame {
          */
         //fileMenu
         fileMenu.setText("文件");
-        newFileMenuItem.setText("新建");
+        newFileMenuItem.setText("新建项目");
+        newFileMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N,InputEvent.CTRL_MASK));
+        newFileMenuItem.addActionListener(new MyMonitorListener());
+        newFileMenuItem.setText("新建文件");
         newFileMenuItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N,InputEvent.CTRL_MASK));
         newFileMenuItem.addActionListener(new MyMonitorListener());
         fileMenu.add(newFileMenuItem);
@@ -289,8 +314,6 @@ public class CMMmainFrame extends JFrame {
         divPan2.setBorder(BorderFactory.createTitledBorder(null,  "output", TitledBorder.LEFT, TitledBorder.ABOVE_TOP));
         
         //set input panel
-//        myInputPanel = new InputPanel(inputTabPanel);
-//        myInputPanel.addTabPanel("input");
         divPan1.setViewportView(inputTabPanel);
 
         //runPanel
@@ -305,10 +328,8 @@ public class CMMmainFrame extends JFrame {
         divPan2.setViewportView(tabPanel);
         
         //only add divPan1 at the beginning
-        //editPan.add(divPan1,BorderLayout.WEST);
         splitPane.setRequestFocusEnabled(false);
         splitPane.setTopComponent(divPan1);  
-        //splitPane.setBottomComponent(divPan2); 
         editPan.add(splitPane);
         //manager the panels
         //use the border layout
@@ -346,6 +367,21 @@ public class CMMmainFrame extends JFrame {
     		pack();
     	}
     }
+    
+    private void newProject(){
+    	//创建工程目录
+    	
+        try{
+        	File file = new File("D:\\CmmWorkspace");
+        	if (!file.exists()  && !file.isDirectory()) {
+				file.mkdir();
+				System.out.println("新建根目录成功");
+			}
+        }catch(Exception e){
+        	System.out.println("新建根目录出错");
+        }
+    }
+    
     
     //new or open file 
     private void newAndOpenfile(){
@@ -538,8 +574,21 @@ public class CMMmainFrame extends JFrame {
         EventQueue.invokeLater(new Runnable() {
             public void run() {
                 new CMMmainFrame().setVisible(true);
+                Console cons = System.console();  
+           	 	if (cons != null) {  
+                	// -------------------------  
+           	 		PrintWriter printWriter = cons.writer();  
+            	    printWriter.write("input:");  
+            	    cons.flush();  
+            	    // -------------------------  
+            	    String str1 = cons.readLine();  
+            	    // -------------------------  
+            	    cons.format("%s", str1);  
+            	    System.out.println(str1);
+                   }  
             }
         });
+        
     }
 
 }
